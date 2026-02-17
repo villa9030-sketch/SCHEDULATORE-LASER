@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ordini Estratti dai PDF</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f2f5;
+            color: #333;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        
+        .controls {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background: #764ba2;
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .status {
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .status.loading {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .table-container {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        thead {
+            background: #667eea;
+            color: white;
+        }
+        
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        tbody tr:hover {
+            background: #f5f5f5;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+        
+        .badge.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .badge.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .stat-card h3 {
+            color: #667eea;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .stat-card .number {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #764ba2;
+        }
+        
+        .error-section {
+            background: white;
+            border-left: 4px solid #f8d7da;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        
+        .error-section h3 {
+            color: #721c24;
+            margin-bottom: 15px;
+        }
+        
+        .error-item {
+            background: #fff5f7;
+            padding: 10px 15px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+            border-left: 3px solid #f8d7da;
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+        
+        .no-data p {
+            font-size: 1.1em;
+            margin-bottom: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .stats {
+                grid-template-columns: 1fr;
+            }
+            
+            table {
+                font-size: 0.9em;
+            }
+            
+            th, td {
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>📋 Ordini Estratti dai PDF</h1>
+        <p>Sistema di elaborazione automatica degli ordini</p>
+    </header>
+    
+    <div class="container">
+        <div class="controls">
+            <button id="processBtn" onclick="processAllPDFs()">
+                🔄 Elabora Tutti i PDF
+            </button>
+            <button id="refreshBtn" onclick="loadOrders()">
+                🔃 Aggiorna Elenco
+            </button>
+            <div id="status" class="status" style="display:none;"></div>
+        </div>
+        
+        <div class="stats" id="stats">
+            <div class="stat-card">
+                <h3>Totale Ordinı</h3>
+                <div class="number" id="totalOrders">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Articoli Estratti</h3>
+                <div class="number" id="totalArticles">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Ultimi PDF Processati</h3>
+                <div class="number" id="lastProcessed">-</div>
+            </div>
+        </div>
+        
+        <div class="table-container">
+            <table id="ordersTable">
+                <thead>
+                    <tr>
+                        <th style="width: 25%">Cliente</th>
+                        <th style="width: 15%">N. Ordine</th>
+                        <th style="width: 10%">Articoli</th>
+                        <th style="width: 20%">Data Consegna</th>
+                        <th style="width: 20%">Stato</th>
+                        <th style="width: 10%">Azioni</th>
+                    </tr>
+                </thead>
+                <tbody id="ordersBody">
+                    <tr>
+                        <td colspan="6" class="no-data">
+                            <p>Nessun ordine caricato. Clicca su "Elabora Tutti i PDF" per iniziare.</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div id="errorSection"></div>
+    </div>
+    
+    <script>
+        // Carica gli ordini quando la pagina si apre
+        window.addEventListener('load', loadOrders);
+        
+        function showStatus(message, type) {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = message;
+            statusEl.className = `status ${type}`;
+            statusEl.style.display = 'block';
+        }
+        
+        function processAllPDFs() {
+            const btn = document.getElementById('processBtn');
+            btn.disabled = true;
+            
+            showStatus('Elaborazione in corso...', 'loading');
+            
+            fetch('/api/process-pdfs', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    folder_path: 'C:/Users/39334/Documents/ORDINI'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const message = `✓ Elaborati ${data.processed} PDF${data.errors > 0 ? ` (${data.errors} errori)` : ''}`;
+                    showStatus(message, 'success');
+                    
+                    // Salva il numero di PDF processati
+                    localStorage.setItem('lastProcessed', data.processed);
+                    
+                    // Ricarica l'elenco
+                    setTimeout(loadOrders, 500);
+                } else {
+                    showStatus(`✗ Errore: ${data.error}`, 'error');
+                }
+            })
+            .catch(error => {
+                showStatus(`✗ Errore di connessione: ${error}`, 'error');
+            })
+            .finally(() => {
+                btn.disabled = false;
+            });
+        }
+        
+        function loadOrders() {
+            fetch('/api/extracted-orders')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        displayOrders(data.orders);
+                        updateStats(data.orders);
+                    } else {
+                        showStatus(`✗ Errore nel caricamento: ${data.error}`, 'error');
+                    }
+                })
+                .catch(error => {
+                    showStatus(`✗ Errore di connessione: ${error}`, 'error');
+                });
+        }
+        
+        function displayOrders(orders) {
+            const tbody = document.getElementById('ordersBody');
+            
+            if (!orders || orders.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="no-data">
+                            <p>Nessun ordine disponibile.</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = orders.map(order => {
+                const dataConsegna = order.data_consegna 
+                    ? new Date(order.data_consegna).toLocaleDateString('it-IT')
+                    : '-';
+                
+                const articoliCount = order.articles ? order.articles.length : 0;
+                
+                return `
+                    <tr>
+                        <td><strong>${order.cliente || 'Sconosciuto'}</strong></td>
+                        <td>${order.numero_ordine || order.id.substring(0, 8)}</td>
+                        <td>${articoliCount}</td>
+                        <td>${dataConsegna}</td>
+                        <td>
+                            <span class="badge success">${order.status || 'ATTIVO'}</span>
+                        </td>
+                        <td>
+                            <a href="#" onclick="viewOrder('${order.id}'); return false;" style="color: #667eea; text-decoration: none;">
+                                👁️ Dettagli
+                            </a>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        function updateStats(orders) {
+            let totalArticles = 0;
+            
+            orders.forEach(order => {
+                totalArticles += (order.articles ? order.articles.length : 0);
+            });
+            
+            document.getElementById('totalOrders').textContent = orders.length;
+            document.getElementById('totalArticles').textContent = totalArticles;
+            
+            const lastProcessed = localStorage.getItem('lastProcessed');
+            document.getElementById('lastProcessed').textContent = lastProcessed || '-';
+        }
+        
+        function viewOrder(orderId) {
+            alert(`Dettagli ordine: ${orderId}\n\nFunzionalità in implementazione...`);
+        }
+    </script>
+</body>
+</html>

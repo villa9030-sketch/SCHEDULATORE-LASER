@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Archivio - Schedulatore Laser</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+        }
+
+        /* Navbar */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 70px;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            display: flex;
+            align-items: center;
+            padding: 0 30px;
+            gap: 40px;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        nav h1 {
+            color: #27ae60;
+            font-size: 20px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        nav a {
+            color: #ecf0f1;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        nav a:hover {
+            background-color: rgba(39, 174, 96, 0.2);
+        }
+
+        nav a.active {
+            background-color: #27ae60;
+            color: white;
+            font-weight: 600;
+        }
+
+        /* Main Content */
+        main {
+            margin-top: 90px;
+            padding: 30px;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-left: 4px solid #27ae60;
+        }
+
+        .header h2 {
+            color: #2c3e50;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header p {
+            color: #7f8c8d;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        /* Orders Table */
+        .table-container {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        thead {
+            background: #34495e;
+            color: white;
+        }
+
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            border-right: 1px solid #2c3e50;
+        }
+
+        th:last-child {
+            border-right: none;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #ecf0f1;
+            border-right: 1px solid #ecf0f1;
+        }
+
+        td:last-child {
+            border-right: none;
+        }
+
+        tbody tr {
+            transition: background 0.2s ease;
+        }
+
+        tbody tr:hover {
+            background: #f9f9f9;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .cliente-info {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .order-id-small {
+            font-size: 12px;
+            color: #95a5a6;
+            font-family: monospace;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: 600;
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .date-cell {
+            font-size: 13px;
+            color: #7f8c8d;
+        }
+
+        .quantity-cell {
+            text-align: center;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .articles-count {
+            text-align: center;
+            font-size: 13px;
+            color: #7f8c8d;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: white;
+            border-radius: 8px;
+            color: #7f8c8d;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .empty-state h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        /* Summary Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+            border-top: 3px solid #27ae60;
+        }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #27ae60;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        /* Filters */
+        .filter-group {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            align-items: end;
+            flex-wrap: wrap;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .filter-group .form-group {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .filter-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #2c3e50;
+            font-weight: 500;
+            font-size: 13px;
+        }
+
+        .filter-group input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        .filter-group input:focus {
+            outline: none;
+            border-color: #27ae60;
+            box-shadow: 0 0 5px rgba(39, 174, 96, 0.3);
+        }
+
+        .btn-filter {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            transition: background 0.3s;
+        }
+
+        .btn-filter:hover {
+            background: #229954;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #27ae60;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        .timing-cell {
+            font-size: 12px;
+            color: #2c3e50;
+        }
+
+        .timing-badge {
+            display: inline-block;
+            background: #f0f0f0;
+            padding: 4px 8px;
+            border-radius: 3px;
+            margin-right: 6px;
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+
+        .timing-badge.piega {
+            border-left: 3px solid #f39c12;
+        }
+
+        .timing-badge.saldatura {
+            border-left: 3px solid #e67e22;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav>
+        <h1>🕐 Schedulatore Laser</h1>
+        <a href="welcome.html">Caricamento</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="laser.html">Laser</a>
+        <a href="piega.html">Piega</a>
+        <a href="saldatura.html">Saldatura</a>
+        <a href="archive.html" class="active">Archivio</a>
+    </nav>
+
+    <main>
+        <div class="header">
+            <h2>📦 Archivio Ordini</h2>
+            <p>Ordini completati e spediti</p>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="countCompleted">0</div>
+                <div class="stat-label">Ordini Completati</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="countTotalPieces">0</div>
+                <div class="stat-label">Pezzi Consegnati</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="countArticles">0</div>
+                <div class="stat-label">Articoli Unici</div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filter-group">
+            <div class="form-group">
+                <label for="filterCliente">Filtra per Cliente</label>
+                <input type="text" id="filterCliente" placeholder="Nome cliente...">
+            </div>
+            <button class="btn-filter" onclick="applyFilters()">🔍 Filtra</button>
+            <button class="btn-filter" style="background: #95a5a6;" onclick="loadOrders()">🔄 Aggiorna</button>
+        </div>
+
+        <!-- Loading -->
+        <div id="loading" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Caricamento archivio...</p>
+        </div>
+
+        <!-- Table -->
+        <div id="tableContainer" class="table-container">
+            <table id="ordersTable" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>Cliente</th>
+                        <th>ID Ordine</th>
+                        <th>Data Consegna</th>
+                        <th style="text-align: center;">Quantità</th>
+                        <th style="text-align: center;">Articoli</th>
+                        <th>Tempi Lavorazione</th>
+                        <th>Stato</th>
+                    </tr>
+                </thead>
+                <tbody id="ordersTableBody"></tbody>
+            </table>
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="empty-state" style="display: none;">
+            <div class="empty-state-icon">📭</div>
+            <h3>Archivio Vuoto</h3>
+            <p>Nessun ordine completato nel sistema</p>
+        </div>
+    </main>
+
+    <script>
+        // Usa URL relativo per funzionare su localhost e IP
+        const API_URL = '/api';
+        let allOrders = [];
+
+        // Carica ordini al caricamento
+        window.addEventListener('DOMContentLoaded', () => {
+            loadOrders();
+            // Aggiorna ogni 10 secondi
+            setInterval(loadOrders, 10000);
+        });
+
+        async function loadOrders() {
+            const loading = document.getElementById('loading');
+            loading.style.display = 'block';
+
+            try {
+                const response = await fetch(`${API_URL}/orders`);
+                const data = await response.json();
+
+                // Filtra solo gli ordini completati (SPEDITO)
+                allOrders = (Array.isArray(data) ? data : []).filter(o => o.status === 'SPEDITO');
+                renderOrders(allOrders);
+                updateStats(allOrders);
+            } catch (error) {
+                console.error('Errore caricamento ordini:', error);
+                showEmptyState();
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        function renderOrders(orders) {
+            const table = document.getElementById('ordersTable');
+            const emptyState = document.getElementById('emptyState');
+            const tbody = document.getElementById('ordersTableBody');
+
+            if (orders.length === 0) {
+                table.style.display = 'none';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            table.style.display = 'table';
+            emptyState.style.display = 'none';
+
+            tbody.innerHTML = orders.map(order => {
+                // Estrai i tempi di PIEGA e SALDATURA
+                let piegaTime = '-';
+                let salvaturaTime = '-';
+
+                if (order.processing_steps && Array.isArray(order.processing_steps)) {
+                    order.processing_steps.forEach(step => {
+                        if (step.fase === 'PIEGA' && step.timestamp_inizio && step.timestamp_fine) {
+                            const duration = Math.round((new Date(step.timestamp_fine) - new Date(step.timestamp_inizio)) / 1000);
+                            piegaTime = formatTime(duration);
+                        }
+                        if (step.fase === 'SALDATURA' && step.timestamp_inizio && step.timestamp_fine) {
+                            const duration = Math.round((new Date(step.timestamp_fine) - new Date(step.timestamp_inizio)) / 1000);
+                            salvaturaTime = formatTime(duration);
+                        }
+                    });
+                }
+
+                const timingHtml = `
+                    ${piegaTime !== '-' ? `<div class="timing-badge piega">🟡 Piega: ${piegaTime}</div>` : ''}
+                    ${salvaturaTime !== '-' ? `<div class="timing-badge saldatura">🟠 Saldatura: ${salvaturaTime}</div>` : ''}
+                    ${piegaTime === '-' && salvaturaTime === '-' ? '<span style="color: #95a5a6;">-</span>' : ''}
+                `;
+
+                return `
+                    <tr>
+                        <td class="cliente-info">${order.cliente}</td>
+                        <td class="order-id-small">${order.id}</td>
+                        <td class="date-cell">${new Date(order.data_consegna).toLocaleDateString('it-IT')}</td>
+                        <td class="quantity-cell">${order.total_quantity || 0}</td>
+                        <td class="articles-count">${order.articles ? order.articles.length : 0}</td>
+                        <td class="timing-cell">${timingHtml}</td>
+                        <td>
+                            <span class="status-badge">✅ ${order.status}</span>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function formatTime(seconds) {
+            if (seconds < 60) {
+                return seconds + 's';
+            } else if (seconds < 3600) {
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                return mins + 'm ' + secs + 's';
+            } else {
+                const hours = Math.floor(seconds / 3600);
+                const mins = Math.floor((seconds % 3600) / 60);
+                return hours + 'h ' + mins + 'm';
+            }
+        }
+
+        function updateStats(orders) {
+            let totalPieces = 0;
+            let totalArticles = 0;
+
+            orders.forEach(order => {
+                totalPieces += order.total_quantity || 0;
+                totalArticles += (order.articles ? order.articles.length : 0);
+            });
+
+            document.getElementById('countCompleted').textContent = orders.length;
+            document.getElementById('countTotalPieces').textContent = totalPieces;
+            document.getElementById('countArticles').textContent = totalArticles;
+        }
+
+        function applyFilters() {
+            const cliente = document.getElementById('filterCliente').value.toLowerCase();
+
+            const filtered = allOrders.filter(order => {
+                return order.cliente.toLowerCase().includes(cliente);
+            });
+
+            renderOrders(filtered);
+        }
+
+        function showEmptyState() {
+            document.getElementById('ordersTable').style.display = 'none';
+            document.getElementById('emptyState').style.display = 'block';
+        }
+    </script>
+</body>
+</html>

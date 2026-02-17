@@ -1,0 +1,228 @@
+╔════════════════════════════════════════════════════════════╗
+║   🔴 SCHEDULATORE LASER v1.0 - GUIDA RAPIDA               ║
+║   Sistema Multi-Postazione per Carpenteria Metallica       ║
+╚════════════════════════════════════════════════════════════╝
+
+┌─ AVVIO VELOCE ─────────────────────────────────────────────┐
+
+1. AVVIA BACKEND (una volta)
+   ┗━ Doppio click: START_BACKEND.bat
+   ┗━ Attendi: "Running on http://0.0.0.0:5000"
+
+2. APRI BROWSER
+   ┗━ Locale:  http://localhost:5000/frontend/welcome.html
+   ┗━ Remoto:  http://192.168.1.100:5000/frontend/welcome.html
+
+3. INIZIA A USARE
+   ┗━ Carica ordini PDF
+   ┗━ Allega disegni DXF/DWG
+   ┗━ Aggiorna stato lavorazioni
+
+└────────────────────────────────────────────────────────────┘
+
+┌─ FILE IMPORTANTI ──────────────────────────────────────────┐
+
+📌 LEGGI PRIMA (Cartella principale)
+   └─ Panoramica completa del sistema
+
+📌 frontend/welcome.html
+   └─ Pagina di benvenuto (check stato sistema)
+
+📌 frontend/scheduler.html
+   └─ APPLICAZIONE PRINCIPALE (quella da usare!)
+
+📌 START_BACKEND.bat
+   └─ Avvia il backend
+
+📌 FIND_IP.bat
+   └─ Trova indirizzo IP del server
+
+📌 TEST_SISTEMA.bat
+   └─ Verifica se tutto è configurato
+
+📌 GUIDA_MULTI_POSTAZIONE.md
+   └─ Guida dettagliata per rete multi-postazione
+
+└────────────────────────────────────────────────────────────┘
+
+┌─ 5 TAB PRINCIPALI ─────────────────────────────────────────┐
+
+📊 DASHBOARD
+   • Statistiche ordini
+   • Ordini per stato (Kanban)
+   • Ordini urgenti
+   • Auto-refresh 30 sec
+
+📋 GESTIONE ORDINI
+   • Upload PDF ordine
+   • Lista ordini
+   • Dettagli ordine
+   • Upload DXF/DWG
+   • File allegati
+
+⚙️ PROGRAMMAZIONE LASER
+   • File raggruppati per spessore
+   • Ordinati per data consegna
+   • Pronto per laser cut
+
+🚀 TRACCIAMENTO LAVORAZIONI
+   • 8 step di lavorazione
+   • Aggiorna stato/progresso
+   • Stima completamento
+   • Note operatore
+
+⚙️ IMPOSTAZIONI
+   • Nome postazione
+   • Stato connessione
+   • Info sistema
+   • Guida rapida
+
+└────────────────────────────────────────────────────────────┘
+
+┌─ FLUSSO LAVORO TIPICO ─────────────────────────────────────┐
+
+[LUNEDÌ MATTINA]
+  1. Ufficio: Carica PDF ordine
+  2. Sistema: Estrae dati automaticamente
+  3. Ufficio: Allega file DXF/DWG
+  4. Sistema: Analizza spessore
+
+[LUNEDÌ POMERIGGIO]
+  5. Laser: Vede file in "Programmazione Laser"
+  6. Laser: Aggiorna "Laser Cutting" → 100%
+  7. Dashboard: Mostra progresso
+
+[MARTEDÌ]
+  8. Assembly: Vede "Pronto per assemblaggio"
+  9. Assembly: Aggiorna "Assemblaggio" → 50%
+  10. QC: Vede e verifica
+  11. Packaging: Completa ordine
+
+[QUALSIASI MOMENTO]
+  • Tutte le postazioni vedono i dati aggiornati
+  • Nessun conflitto - database centralizzato
+  • Dashboard auto-refresh ogni 30 sec
+
+└────────────────────────────────────────────────────────────┘
+
+┌─ RETE MULTI-POSTAZIONE ────────────────────────────────────┐
+
+         PC SERVER (Windows)
+         IP: 192.168.1.100
+         Backend Python in esecuzione
+              ↓
+    ┌─────────┼─────────┐
+    ↓         ↓         ↓
+ OFFICE     LASER     ASSEMBLY
+(Browser)  (Browser)  (Browser)
+http://192.168.1.100:5000
+
+Stesso backend → Stesso database → Dati sincronizzati
+
+└────────────────────────────────────────────────────────────┘
+
+┌─ COMMAND QUICK REFERENCE ──────────────────────────────────┐
+
+AVVIA BACKEND:
+  cd c:\Users\39334\Documents\SCHEDULATORE LASER\app
+  START_BACKEND.bat
+
+TROVA IP:
+  FIND_IP.bat
+
+TEST SISTEMA:
+  TEST_SISTEMA.bat
+
+BROWSER LOCALE:
+  http://localhost:5000/frontend/welcome.html
+
+BROWSER REMOTO:
+  http://[IP_SERVER]:5000/frontend/welcome.html
+
+└────────────────────────────────────────────────────────────┘
+
+┌─ SINCRONIZZAZIONE ─────────────────────────────────────────┐
+
+Postazione A                      Postazione B
+   │                                   │
+   ├─ Aggiorna Step X                  │
+   │       ↓                           │
+   └──→ Backend Server ←───────────────┤
+            ↓                          │
+        Database                      │
+            ↓                          │
+   ┌────────────────────┐              │
+   │ Dati Sincronizzati ├──→ Vede cambio
+   └────────────────────┘    (30 sec)
+
+└────────────────────────────────────────────────────────────┘
+
+┌─ TROUBLESHOOTING ──────────────────────────────────────────┐
+
+❌ "Backend non raggiungibile"
+   ✓ Verificare: START_BACKEND.bat in esecuzione
+   ✓ Firewall: Aprire porta 5000
+   ✓ IP: Usare FIND_IP.bat
+
+❌ "Dati non sincronizzati"
+   ✓ Aggiornare pagina (F5)
+   ✓ Dashboard auto-refresh 30 sec
+   ✓ Verificare rete (ping IP)
+
+❌ "File non carica"
+   ✓ Cartelle uploads/ devono esistere
+   ✓ Verificare permessi di scrittura
+   ✓ Spazio disco disponibile
+
+❌ "Python non trovato"
+   ✓ Installare Python 3.8+ da python.org
+   ✓ Aggiungere al PATH del sistema
+   ✓ Riavviare terminale
+
+└────────────────────────────────────────────────────────────┘
+
+┌─ CHECKLIST AVVIO ──────────────────────────────────────────┐
+
+Preparazione Server:
+  ☐ START_BACKEND.bat eseguito
+  ☐ Backend mostra "Running on http://0.0.0.0:5000"
+  ☐ IP noto (es: 192.168.1.100)
+
+Primo Accesso:
+  ☐ Browser → http://localhost:5000/frontend/welcome.html
+  ☐ Stato connessione: "✅ Connesso"
+  ☐ Pulsante "▶️ Apri Schedulatore" disponibile
+
+Funzionamento:
+  ☐ Caricamento ordini PDF funziona
+  ☐ Upload DXF/DWG funziona
+  ☐ Aggiornamento step funziona
+  ☐ Dashboard si aggiorna
+
+Rete:
+  ☐ Altre postazioni raggiungono http://IP:5000
+  ☐ Dati sincronizzati tra postazioni
+  ☐ Database aggiornato
+
+└────────────────────────────────────────────────────────────┘
+
+┌─ SUPPORTO ─────────────────────────────────────────────────┐
+
+Documentazione Completa:
+  • LEGGI_PRIMA.md (Questo file - Panoramica)
+  • GUIDA_MULTI_POSTAZIONE.md (Rete dettagliata)
+  • frontend/README_FRONTEND.md (UI e funzionalità)
+  • app/README.md (Tecnico backend)
+
+In Caso di Problemi:
+  1. Consulta documentazione sopra
+  2. Esegui TEST_SISTEMA.bat
+  3. Controlla console browser (F12)
+  4. Riavvia START_BACKEND.bat
+
+└────────────────────────────────────────────────────────────┘
+
+╔════════════════════════════════════════════════════════════╗
+║  🎉 Sistema pronto per l'uso su più postazioni!           ║
+║  Versione: 1.0 | Febbraio 2026                            ║
+╚════════════════════════════════════════════════════════════╝

@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stazione Saldatura - Schedulatore Laser</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+        }
+
+        /* Navbar */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 70px;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            display: flex;
+            align-items: center;
+            padding: 0 30px;
+            gap: 40px;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        nav h1 {
+            color: #27ae60;
+            font-size: 20px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        nav a {
+            color: #ecf0f1;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        nav a:hover {
+            background-color: rgba(39, 174, 96, 0.2);
+        }
+
+        nav a.active {
+            background-color: #27ae60;
+            color: white;
+            font-weight: 600;
+        }
+
+        /* Main Content */
+        main {
+            margin-top: 90px;
+            padding: 30px;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-left: 4px solid #e67e22;
+        }
+
+        .header h2 {
+            color: #2c3e50;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header p {
+            color: #7f8c8d;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        /* Orders Grid */
+        .orders-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .order-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            border-top: 4px solid #e67e22;
+        }
+
+        .order-card:hover {
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+        }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 12px;
+        }
+
+        .order-card h3 {
+            color: #2c3e50;
+            font-size: 16px;
+            margin: 0;
+        }
+
+        .order-id {
+            font-size: 11px;
+            color: #95a5a6;
+            background: #f0f0f0;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+
+        .order-info {
+            font-size: 13px;
+            color: #7f8c8d;
+            margin-bottom: 8px;
+        }
+
+        .info-strong {
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        /* Articles for Phase */
+        .articles-section {
+            margin: 15px 0;
+            padding: 12px;
+            background: #fff5f0;
+            border-radius: 4px;
+        }
+
+        .articles-section h4 {
+            color: #d35400;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .article-item {
+            font-size: 13px;
+            color: #2c3e50;
+            padding: 6px 0;
+            border-bottom: 1px solid #f0ddd4;
+        }
+
+        .article-item:last-child {
+            border-bottom: none;
+        }
+
+        .article-name {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .article-qty {
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .btn-start {
+            flex: 1;
+            background: #e67e22;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+
+        .btn-start:hover {
+            background: #d35400;
+        }
+
+        .btn-complete {
+            flex: 1;
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+
+        .btn-complete:hover {
+            background: #229954;
+        }
+
+        .btn-complete:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+        }
+
+        /* Status Badge */
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        .status-ready {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        /* Timer */
+        .timer-display {
+            display: none;
+            background: #e67e22;
+            color: white;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 12px 0;
+            text-align: center;
+            font-size: 32px;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+            box-shadow: 0 2px 8px rgba(230, 126, 34, 0.3);
+        }
+
+        .timer-display.active {
+            display: block;
+            animation: pulse 0.5s ease-in-out;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        .timer-label {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Empty State */
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 60px 20px;
+            background: white;
+            border-radius: 8px;
+            color: #7f8c8d;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .empty-state h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        /* Messages */
+        .message {
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+
+        /* Summary Box */
+        .summary-box {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            text-align: center;
+        }
+
+        .summary-item {
+            border-right: 1px solid #eee;
+            padding-right: 15px;
+        }
+
+        .summary-item:last-child {
+            border-right: none;
+        }
+
+        .summary-number {
+            font-size: 28px;
+            font-weight: bold;
+            color: #e67e22;
+        }
+
+        .summary-label {
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-top: 5px;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav>
+        <h1>🕐 Schedulatore Laser</h1>
+        <a href="welcome.html">Caricamento</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="laser.html">Laser</a>
+        <a href="piega.html">Piega</a>
+        <a href="saldatura.html" class="active">Saldatura</a>
+        <a href="archive.html">Archivio</a>
+    </nav>
+
+    <main>
+        <div class="header">
+            <h2>🟠 Stazione SALDATURA</h2>
+            <p>Articoli in attesa di lavorazione in saldatura</p>
+        </div>
+
+        <div id="message" class="message"></div>
+
+        <div class="summary-box">
+            <div class="summary-item">
+                <div class="summary-number" id="countOrders">0</div>
+                <div class="summary-label">Ordini</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-number" id="countArticles">0</div>
+                <div class="summary-label">Articoli</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-number" id="countPieces">0</div>
+                <div class="summary-label">Pezzi Totali</div>
+            </div>
+        </div>
+
+        <div class="orders-grid" id="ordersContainer"></div>
+    </main>
+
+    <!-- MODALE COMPLETAMENTO PARZIALE -->
+    <div id="partialCompleteModal" style="display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);">
+        <div style="background-color: white; margin: 5% auto; padding: 30px; border-radius: 8px; width: 90%; max-width: 500px; box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
+            <h2 style="margin-bottom: 20px; color: #2c3e50;">✅ Completa Fase SALDATURA</h2>
+            <p style="color: #7f8c8d; margin-bottom: 20px;">Seleziona gli articoli completati per questa fase:</p>
+            
+            <div id="articlesCheckboxes" style="background: #f9f9f9; padding: 15px; border-radius: 4px; margin-bottom: 20px; max-height: 300px; overflow-y: auto;">
+                <!-- Checkbox articoli generati dinamicamente -->
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <button onclick="closePartialModal()" style="flex: 1; background: #95a5a6; color: white; border: none; padding: 12px; border-radius: 4px; cursor: pointer; font-weight: 600;">
+                    Annulla
+                </button>
+                <button onclick="submitPartialComplete()" style="flex: 1; background: #27ae60; color: white; border: none; padding: 12px; border-radius: 4px; cursor: pointer; font-weight: 600;">
+                    ✅ Completa Selezionati
+                </button>
+                <button onclick="completeAllPartialModal()" style="flex: 1; background: #3498db; color: white; border: none; padding: 12px; border-radius: 4px; cursor: pointer; font-weight: 600;" title="Completa tutti gli articoli per questa fase">
+                    🔄 Completa Tutti
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Usa URL relativo per funzionare su localhost e IP
+        const API_URL = '/api';
+        const PHASE = 'SALDATURA';
+        const timers = {}; // Traccia i timer attivi
+        const activePhases = {}; // Traccia ordini con fase in corso: { orderId: { startTime, displayTime } }
+        let currentOrderForCompletion = null;
+        let currentOrderArticles = [];
+
+        // Carica ordini al caricamento
+        window.addEventListener('DOMContentLoaded', () => {
+            loadOrders();
+            // Aggiorna ogni 5 secondi
+            setInterval(loadOrders, 5000);
+        });
+
+        async function loadOrders() {
+            try {
+                const response = await fetch(`${API_URL}/phase/${PHASE}/orders`);
+                const orders = await response.json();
+
+                renderOrders(Array.isArray(orders) ? orders : []);
+                updateSummary(orders);
+            } catch (error) {
+                console.error('Errore caricamento ordini:', error);
+                showMessage('Errore connessione al server', 'error');
+            }
+        }
+
+        function renderOrders(orders) {
+            const container = document.getElementById('ordersContainer');
+
+            if (orders.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">✅</div>
+                        <h3>Nessun Lavoro</h3>
+                        <p>Non ci sono articoli in attesa per questa fase</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = orders.map(order => {
+                const articlesHtml = (order.articles_next_phase || []).map(article => `
+                    <div class="article-item">
+                        <div class="article-name">${article.name}</div>
+                        <div class="article-qty">${article.code ? article.code + ' - ' : ''}${article.qty} pz</div>
+                    </div>
+                `).join('');
+
+                const totalArticles = order.articles_next_phase ? order.articles_next_phase.length : 0;
+                const totalPieces = order.articles_next_phase ? order.articles_next_phase.reduce((sum, a) => sum + a.qty, 0) : 0;
+                
+                // Controlla se questo ordine ha un timer attivo
+                const isActive = activePhases[order.id];
+                const timerDisplay = isActive ? 'display: block;' : 'display: none;';
+                const timerValue = isActive ? `<div id="timer-value-${order.id}">${isActive.displayTime}</div>` : `<div id="timer-value-${order.id}">00:00</div>`;
+                const startBtnDisabled = isActive ? 'disabled' : '';
+                const completeBtnDisabled = isActive ? '' : 'disabled';
+
+                return `
+                    <div class="order-card">
+                        <div class="order-header">
+                            <h3>${order.cliente}</h3>
+                            <div class="order-id">${order.id.substring(0, 8)}</div>
+                        </div>
+
+                        <div class="order-info">
+                            Consegna: <span class="info-strong">${new Date(order.data_consegna).toLocaleDateString('it-IT')}</span>
+                        </div>
+
+                        <div class="articles-section">
+                            <h4>📦 ${totalArticles} Articol${totalArticles !== 1 ? 'i' : 'o'} (${totalPieces} pz)</h4>
+                            ${articlesHtml}
+                        </div>
+
+                        <div class="timer-display ${isActive ? 'active' : ''}" id="timer-${order.id}" style="${timerDisplay}">
+                            ${timerValue}
+                            <div class="timer-label">⏱️ Tempo Lavorazione</div>
+                        </div>
+
+                        <span class="status-badge status-ready">⏳ Pronto per SALDATURA</span>
+
+                        <div class="action-buttons">
+                            <button class="btn-start" id="btn-start-${order.id}" onclick="startPhase('${order.id}')" ${startBtnDisabled}>
+                                ▶️ Inizia
+                            </button>
+                            <button class="btn-complete" id="btn-complete-${order.id}" onclick="openPartialCompleteModal('${order.id}')" ${completeBtnDisabled}>
+                                ✅ Completa
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            // Ripristina i timer per gli ordini attivi
+            Object.keys(activePhases).forEach(orderId => {
+                const active = activePhases[orderId];
+                restoreTimer(orderId, active.startTime);
+            });
+        }
+
+        async function startPhase(orderId) {
+            try {
+                const response = await fetch(`${API_URL}/orders/${orderId}/phase/${PHASE}/start`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ operatore: 'Operatore' })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showMessage(`✅ Fase ${PHASE} iniziata`, 'success');
+                    
+                    // Salva lo stato di questo ordine come attivo
+                    activePhases[orderId] = {
+                        startTime: Date.now(),
+                        displayTime: '00:00'
+                    };
+                    
+                    // Avvia il cronometro
+                    startTimer(orderId);
+                    
+                    // Disabilita il pulsante start e abilita il complete
+                    const btnStart = document.getElementById(`btn-start-${orderId}`);
+                    const btnComplete = document.getElementById(`btn-complete-${orderId}`);
+                    if (btnStart) btnStart.disabled = true;
+                    if (btnComplete) btnComplete.disabled = false;
+                    
+                    // Mostra il timer
+                    const timerDisplay = document.getElementById(`timer-${orderId}`);
+                    if (timerDisplay) timerDisplay.classList.add('active');
+                } else {
+                    showMessage('Errore: ' + (data.error || 'Sconosciuto'), 'error');
+                }
+            } catch (error) {
+                showMessage('Errore: ' + error.message, 'error');
+            }
+        }
+
+        function startTimer(orderId) {
+            if (timers[orderId]) {
+                clearInterval(timers[orderId]);
+            }
+
+            let seconds = 0;
+            const timerDisplay = document.getElementById(`timer-${orderId}`);
+            const timerValue = document.getElementById(`timer-value-${orderId}`);
+
+            if (timerDisplay) timerDisplay.classList.add('active');
+
+            timers[orderId] = setInterval(() => {
+                seconds++;
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                const display = String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+                if (timerValue) timerValue.textContent = display;
+                
+                // Aggiorna lo stato per il restore dopo reload
+                if (activePhases[orderId]) {
+                    activePhases[orderId].displayTime = display;
+                }
+            }, 1000);
+        }
+
+        function restoreTimer(orderId, startTime) {
+            if (timers[orderId]) {
+                clearInterval(timers[orderId]);
+            }
+
+            const timerDisplay = document.getElementById(`timer-${orderId}`);
+            const timerValue = document.getElementById(`timer-value-${orderId}`);
+
+            if (!timerDisplay || !timerValue) return;
+
+            timers[orderId] = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                const mins = Math.floor(elapsed / 60);
+                const secs = elapsed % 60;
+                const display = String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+                timerValue.textContent = display;
+                
+                if (activePhases[orderId]) {
+                    activePhases[orderId].displayTime = display;
+                }
+            }, 1000);
+        }
+
+        async function openPartialCompleteModal(orderId) {
+            try {
+                // Ferma il cronometro
+                if (timers[orderId]) {
+                    clearInterval(timers[orderId]);
+                }
+
+                // Recupera dettagli ordine
+                const response = await fetch(`${API_URL}/orders/${orderId}`);
+                const order = await response.json();
+
+                if (order.error) {
+                    showMessage('Errore caricamento dettagli ordine', 'error');
+                    return;
+                }
+
+                currentOrderForCompletion = orderId;
+                currentOrderArticles = order.articles || [];
+
+                // Genera checkbox per articoli
+                const checkboxesDiv = document.getElementById('articlesCheckboxes');
+                checkboxesDiv.innerHTML = currentOrderArticles.map((article, idx) => {
+                    const isCompleted = article.completed_phases && article.completed_phases.includes(PHASE);
+                    const disabled = isCompleted ? 'disabled' : '';
+                    const checkedAttr = isCompleted ? 'checked' : '';
+                    
+                    return `
+                        <div style="padding: 10px; margin-bottom: 8px; background: white; border-radius: 4px; border: 1px solid #e0e0e0; display: flex; align-items: center; gap: 10px;">
+                            <input type="checkbox" id="article_${idx}" ${checkedAttr} ${disabled} style="width: 18px; height: 18px; cursor: pointer;">
+                            <label for="article_${idx}" style="flex: 1; cursor: pointer; color: #2c3e50; font-weight: ${isCompleted ? 'bold' : '500'};">
+                                <strong>${article.name}</strong> 
+                                <span style="color: #7f8c8d; font-size: 12px;">(${article.qty} pz)</span>
+                                ${isCompleted ? '<span style="color: #27ae60; margin-left: 10px;">✅ Completato</span>' : ''}
+                            </label>
+                        </div>
+                    `;
+                }).join('');
+
+                // Mostra modale
+                document.getElementById('partialCompleteModal').style.display = 'block';
+            } catch (error) {
+                showMessage('Errore: ' + error.message, 'error');
+            }
+        }
+
+        function closePartialModal() {
+            document.getElementById('partialCompleteModal').style.display = 'none';
+            currentOrderForCompletion = null;
+            currentOrderArticles = [];
+        }
+
+        async function submitPartialComplete() {
+            if (!currentOrderForCompletion) return;
+
+            // Recupera checkbox selezionati
+            const selectedIndices = [];
+            currentOrderArticles.forEach((_, idx) => {
+                const checkbox = document.getElementById(`article_${idx}`);
+                if (checkbox && checkbox.checked && !checkbox.disabled) {
+                    selectedIndices.push(idx);
+                }
+            });
+
+            if (selectedIndices.length === 0) {
+                showMessage('Seleziona almeno un articolo', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/orders/${currentOrderForCompletion}/phase/${PHASE}/complete-partial`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        article_indices: selectedIndices,
+                        note: ''
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    const msg = data.phase_complete 
+                        ? `✅ Fase ${PHASE} completata!` 
+                        : `✅ ${selectedIndices.length} articolo/i completato/i`;
+                    showMessage(msg, 'success');
+                    closePartialModal();
+                    await loadOrders();
+                } else {
+                    showMessage('Errore: ' + (data.error || 'Sconosciuto'), 'error');
+                }
+            } catch (error) {
+                showMessage('Errore: ' + error.message, 'error');
+            }
+        }
+
+        async function completeAllPartialModal() {
+            if (!currentOrderForCompletion) return;
+
+            // Seleziona tutti gli articoli non completati
+            currentOrderArticles.forEach((_, idx) => {
+                const checkbox = document.getElementById(`article_${idx}`);
+                if (checkbox && !checkbox.disabled) {
+                    checkbox.checked = true;
+                }
+            });
+
+            // Invia il completamento
+            await submitPartialComplete();
+        }
+
+        function updateSummary(orders) {
+            const totalOrders = orders.length;
+            let totalArticles = 0;
+            let totalPieces = 0;
+
+            orders.forEach(order => {
+                const articlesForPhase = order.articles_next_phase || [];
+                totalArticles += articlesForPhase.length;
+                totalPieces += articlesForPhase.reduce((sum, a) => sum + a.qty, 0);
+            });
+
+            document.getElementById('countOrders').textContent = totalOrders;
+            document.getElementById('countArticles').textContent = totalArticles;
+            document.getElementById('countPieces').textContent = totalPieces;
+        }
+
+        function showMessage(msg, type) {
+            const msgBox = document.getElementById('message');
+            msgBox.textContent = msg;
+            msgBox.className = `message ${type}`;
+
+            setTimeout(() => {
+                msgBox.className = 'message';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

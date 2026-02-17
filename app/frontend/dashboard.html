@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Schedulatore Laser</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+        }
+
+        /* Navbar */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 70px;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            display: flex;
+            align-items: center;
+            padding: 0 30px;
+            gap: 40px;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        nav h1 {
+            color: #27ae60;
+            font-size: 20px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        nav a {
+            color: #ecf0f1;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        nav a:hover {
+            background-color: rgba(39, 174, 96, 0.2);
+        }
+
+        nav a.active {
+            background-color: #27ae60;
+            color: white;
+            font-weight: 600;
+        }
+
+        /* Main Content */
+        main {
+            margin-top: 90px;
+            padding: 30px;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .header h2 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 15px;
+            align-items: end;
+        }
+
+        .filter-group .form-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .filter-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #2c3e50;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .filter-group input,
+        .filter-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .filter-group input:focus,
+        .filter-group select:focus {
+            outline: none;
+            border-color: #27ae60;
+            box-shadow: 0 0 5px rgba(39, 174, 96, 0.3);
+        }
+
+        .btn-filter {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+
+        .btn-filter:hover {
+            background: #229954;
+        }
+
+        /* Calendar */
+        .calendar-container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .calendar-weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .weekday {
+            text-align: center;
+            font-weight: 600;
+            color: #2c3e50;
+            padding: 10px;
+            background: #ecf0f1;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .calendar-days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+        }
+
+        .calendar-day {
+            min-height: 120px;
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            padding: 8px;
+            background: #fafafa;
+            transition: all 0.3s ease;
+        }
+
+        .calendar-day:hover {
+            border-color: #27ae60;
+            background: #f0fdf4;
+        }
+
+        .calendar-day.other-month {
+            background: #f5f5f5;
+            opacity: 0.5;
+        }
+
+        .calendar-day.today {
+            border-color: #27ae60;
+            background: #f0fdf4;
+            font-weight: 600;
+        }
+
+        .calendar-day-number {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .calendar-day.other-month .calendar-day-number {
+            color: #95a5a6;
+        }
+
+        .calendar-day.today .calendar-day-number {
+            color: #27ae60;
+        }
+
+        .day-orders {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            max-height: 80px;
+            overflow-y: auto;
+        }
+
+        .day-order-card {
+            background: white;
+            padding: 4px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+            cursor: pointer;
+            border-left: 3px solid #27ae60;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: all 0.2s ease;
+        }
+
+        .day-order-card:hover {
+            background: #ecf0f1;
+            font-weight: 600;
+        }
+
+        .day-order-card.ricevuto {
+            border-left-color: #3498db;
+        }
+
+        .day-order-card.spedito {
+            border-left-color: #27ae60;
+            background: #f0fdf4;
+        }
+
+        /* Orders Grid - Hidden by default */
+        .orders-grid {
+            display: none;
+        }
+
+        .order-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 4px solid #27ae60;
+        }
+
+        .order-card:hover {
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+        }
+
+        .order-card h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .order-info {
+            font-size: 13px;
+            color: #7f8c8d;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .order-status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        .status-ricevuto {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .status-in-progress {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-spedito {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .articles-summary {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #eee;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .articles-summary strong {
+            color: #2c3e50;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal.show {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #27ae60;
+            padding-bottom: 15px;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            color: #2c3e50;
+        }
+
+        .close-modal {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            background: none;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-modal:hover {
+            color: #e74c3c;
+        }
+
+        /* Modal Sections */
+        .modal-section {
+            margin-bottom: 25px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-left: 4px solid #27ae60;
+            border-radius: 4px;
+        }
+
+        .modal-section h3 {
+            color: #2c3e50;
+            margin-bottom: 12px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        /* Order Info */
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            font-size: 13px;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .info-label {
+            color: #7f8c8d;
+            font-weight: 500;
+        }
+
+        .info-value {
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        /* Articles Table */
+        .articles-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            margin-top: 10px;
+        }
+
+        .articles-table thead {
+            background: #34495e;
+            color: white;
+        }
+
+        .articles-table th {
+            padding: 10px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .articles-table td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .articles-table tbody tr:hover {
+            background: #f9f9f9;
+        }
+
+        .phase-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-right: 4px;
+            margin-bottom: 4px;
+        }
+
+        .phase-completed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .phase-pending {
+            background: #f8f9fa;
+            color: #666;
+        }
+
+        .phase-next {
+            background: #fff3cd;
+            color: #856404;
+            font-weight: 700;
+        }
+
+        /* Processing Timeline */
+        .timeline {
+            margin-top: 15px;
+        }
+
+        .timeline-step {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            padding: 10px;
+            border-left: 3px solid #ddd;
+            padding-left: 15px;
+            background: #f9f9f9;
+            border-radius: 2px;
+        }
+
+        .timeline-step.completed {
+            border-left-color: #27ae60;
+            background: #f0fdf4;
+        }
+
+        .timeline-step.in-progress {
+            border-left-color: #f39c12;
+            background: #fffbf0;
+        }
+
+        .timeline-icon {
+            font-size: 16px;
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .timeline-info {
+            flex: 1;
+            font-size: 13px;
+        }
+
+        .timeline-fase {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .timeline-time {
+            font-size: 11px;
+            color: #7f8c8d;
+            margin-top: 2px;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #7f8c8d;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .empty-state h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .empty-state p {
+            margin-bottom: 20px;
+        }
+
+        .btn-create {
+            background: #27ae60;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+            transition: background 0.3s;
+        }
+
+        .btn-create:hover {
+            background: #229954;
+        }
+
+        /* Loading */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #27ae60;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav>
+        <h1>🕐 Schedulatore Laser</h1>
+        <a href="welcome.html">Caricamento</a>
+        <a href="dashboard.html" class="active">Dashboard</a>
+        <a href="laser.html">Laser</a>
+        <a href="piega.html">Piega</a>
+        <a href="saldatura.html">Saldatura</a>
+        <a href="archive.html">Archivio</a>
+    </nav>
+
+    <main>
+        <div class="header">
+            <h2>� Calendario Ordini</h2>
+
+            <div class="calendar-controls" style="margin-top: 15px; display: flex; gap: 15px; align-items: center; justify-content: space-between;">
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn-filter" onclick="previousMonth()">◀ Precedente</button>
+                    <h3 id="monthYear" style="color: #2c3e50; margin: 0; min-width: 200px; text-align: center;"></h3>
+                    <button class="btn-filter" onclick="nextMonth()">Successivo ▶</button>
+                </div>
+                <button class="btn-filter" style="background: #95a5a6;" onclick="loadOrders()">🔄 Aggiorna</button>
+            </div>
+        </div>
+
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Caricamento ordini...</p>
+        </div>
+
+        <div id="calendarContainer" class="calendar-container">
+            <div class="calendar-weekdays">
+                <div class="weekday">Lun</div>
+                <div class="weekday">Mar</div>
+                <div class="weekday">Mer</div>
+                <div class="weekday">Gio</div>
+                <div class="weekday">Ven</div>
+                <div class="weekday">Sab</div>
+                <div class="weekday">Dom</div>
+            </div>
+            <div class="calendar-days" id="calendarDays"></div>
+        </div>
+    </main>
+
+    <!-- Modal Dettagli Ordine -->
+    <div id="orderModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalOrderId">Dettagli Ordine</h2>
+                <button class="close-modal" onclick="closeModal()">&times;</button>
+            </div>
+
+            <div class="modal-section">
+                <h3>📋 Informazioni Ordine</h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">Cliente:</span>
+                        <span class="info-value" id="modalCliente">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Data Consegna:</span>
+                        <span class="info-value" id="modalDataConsegna">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Quantità Totale:</span>
+                        <span class="info-value" id="modalQuantita">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Stato:</span>
+                        <span class="info-value" id="modalStatus">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-section">
+                <h3>📦 Articoli</h3>
+                <table class="articles-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 40%;">Articolo</th>
+                            <th style="width: 20%;">Quantità</th>
+                            <th style="width: 40%;">Stato Articolo</th>
+                        </tr>
+                    </thead>
+                    <tbody id="modalArticlesBody">
+                        <tr><td colspan="3">Caricamento...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="modal-section">
+                <h3>⏱️ Fasi di Lavorazione</h3>
+                <div class="timeline" id="modalTimeline">
+                    <p style="color: #7f8c8d; font-size: 13px;">Caricamento...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Usa URL relativo per funzionare su localhost e IP
+        const API_URL = '/api';
+        let allOrders = [];
+        let currentDate = new Date();
+
+        // Carica ordini al caricamento
+        window.addEventListener('DOMContentLoaded', () => {
+            loadOrders();
+            renderCalendar();
+            // Aggiorna ogni 10 secondi
+            setInterval(loadOrders, 10000);
+        });
+
+        async function loadOrders() {
+            const loading = document.getElementById('loading');
+            loading.classList.add('show');
+
+            try {
+                const response = await fetch(`${API_URL}/orders`);
+                const data = await response.json();
+
+                allOrders = Array.isArray(data) ? data : [];
+                renderCalendar();
+            } catch (error) {
+                console.error('Errore caricamento ordini:', error);
+                document.getElementById('calendarDays').innerHTML = `
+                    <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #e74c3c;">
+                        <p>❌ Errore connessione al backend</p>
+                    </div>
+                `;
+            } finally {
+                loading.classList.remove('show');
+            }
+        }
+
+        function previousMonth() {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            renderCalendar();
+        }
+
+        function nextMonth() {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            renderCalendar();
+        }
+
+        function renderCalendar() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+
+            // Aggiorna header mese
+            const monthName = new Date(year, month).toLocaleString('it-IT', { month: 'long', year: 'numeric' });
+            document.getElementById('monthYear').textContent = monthName.charAt(0).toUpperCase() + monthName.slice(1);
+
+            // Primo giorno del mese e numero di giorni
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const daysInMonth = lastDay.getDate();
+            const startingDayOfWeek = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1; // Lunedì = 0
+
+            // Genera giorni del mese precedente
+            const prevMonthLastDay = new Date(year, month, 0).getDate();
+            const calendarContainer = document.getElementById('calendarDays');
+            calendarContainer.innerHTML = '';
+
+            // Giorni mese precedente
+            for (let i = startingDayOfWeek - 1; i >= 0; i--) {
+                const day = prevMonthLastDay - i;
+                const dayElement = createDayElement(day, month - 1, year, true);
+                calendarContainer.appendChild(dayElement);
+            }
+
+            // Giorni mese attuale
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayElement = createDayElement(day, month, year, false);
+                calendarContainer.appendChild(dayElement);
+            }
+
+            // Giorni mese successivo
+            const totalCells = calendarContainer.childElementCount;
+            const remainingCells = 42 - totalCells; // 6 settimane x 7 giorni
+            for (let day = 1; day <= remainingCells; day++) {
+                const dayElement = createDayElement(day, month + 1, year, true);
+                calendarContainer.appendChild(dayElement);
+            }
+        }
+
+        function createDayElement(day, month, year, isOtherMonth) {
+            const dayDiv = document.createElement('div');
+            dayDiv.className = 'calendar-day';
+            
+            if (isOtherMonth) {
+                dayDiv.classList.add('other-month');
+                // Adjusted month for other months
+                if (month < 0) month = 11;
+                if (month > 11) month = 0;
+            }
+
+            // Check if today
+            const today = new Date();
+            if (day === today.getDate() && month === today.getMonth() && year === today.getFullYear() && !isOtherMonth) {
+                dayDiv.classList.add('today');
+            }
+
+            // Crea numero giorno
+            const dayNumber = document.createElement('div');
+            dayNumber.className = 'calendar-day-number';
+            dayNumber.textContent = day;
+            dayDiv.appendChild(dayNumber);
+
+            // Crea container ordini
+            const ordersDiv = document.createElement('div');
+            ordersDiv.className = 'day-orders';
+
+            // Trova ordini per questo giorno
+            const dateToCheck = new Date(year, month, day);
+            const ordersForDay = allOrders.filter(order => {
+                const orderDate = new Date(order.data_consegna);
+                return orderDate.getDate() === day &&
+                       orderDate.getMonth() === month &&
+                       orderDate.getFullYear() === year &&
+                       order.status !== 'SPEDITO';  // Escludi ordini completati
+            });
+
+            // Aggiungi ordini
+            ordersForDay.forEach(order => {
+                const orderCard = document.createElement('div');
+                orderCard.className = `day-order-card ${order.status.toLowerCase()}`;
+                orderCard.textContent = order.cliente.substring(0, 12);
+                orderCard.title = `${order.cliente} - ${order.articles ? order.articles.length : 0} articoli`;
+                orderCard.onclick = (e) => {
+                    e.stopPropagation();
+                    openOrderModal(order.id);
+                };
+                ordersDiv.appendChild(orderCard);
+            });
+
+            dayDiv.appendChild(ordersDiv);
+            return dayDiv;
+        }
+
+        async function openOrderModal(orderId) {
+            const modal = document.getElementById('orderModal');
+            modal.classList.add('show');
+
+            try {
+                const response = await fetch(`${API_URL}/orders/${orderId}`);
+                const order = await response.json();
+
+                if (order.error) {
+                    alert('Errore caricamento ordine: ' + order.error);
+                    return;
+                }
+
+                // Popola header
+                document.getElementById('modalOrderId').textContent = `Ordine: ${order.cliente}`;
+                document.getElementById('modalCliente').textContent = order.cliente;
+                document.getElementById('modalDataConsegna').textContent = new Date(order.data_consegna).toLocaleDateString('it-IT');
+                document.getElementById('modalQuantita').textContent = order.total_quantity || 0;
+                document.getElementById('modalStatus').textContent = order.status || 'RICEVUTO';
+
+                // Popola articoli
+                const articlesBody = document.getElementById('modalArticlesBody');
+                articlesBody.innerHTML = order.articles.map(article => {
+                    const completedPhases = article.completed_phases || [];
+                    const requiredPhases = article.required_phases || [];
+                    const nextPhase = article.next_phase || 'Completato';
+
+                    const phasesHtml = requiredPhases.map(phase => {
+                        const isCompleted = completedPhases.includes(phase);
+                        const isNext = phase === nextPhase;
+                        const className = isCompleted ? 'phase-completed' : isNext ? 'phase-next' : 'phase-pending';
+                        return `<span class="phase-badge ${className}">${phase}</span>`;
+                    }).join('');
+
+                    return `
+                        <tr>
+                            <td><strong>${article.name}</strong> ${article.code ? `(${article.code})` : ''}</td>
+                            <td>${article.qty} pz</td>
+                            <td>
+                                ${phasesHtml}
+                                ${nextPhase !== 'Completato' ? `<br><small style="color: #f39c12; font-weight: 600;">Prossima: <strong>${nextPhase}</strong></small>` : '<br><small style="color: #27ae60; font-weight: 600;">✅ Completato</small>'}
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+
+                // Popola timeline
+                const timeline = document.getElementById('modalTimeline');
+                const processingSteps = order.processing_steps || [];
+
+                if (processingSteps.length === 0) {
+                    timeline.innerHTML = '<p style="color: #7f8c8d; font-size: 13px;">Nessuna fase avviata</p>';
+                } else {
+                    timeline.innerHTML = processingSteps.map(step => {
+                        const isCompleted = step.timestamp_fine;
+                        const isStarted = step.timestamp_inizio;
+                        const status = isCompleted ? 'completed' : isStarted ? 'in-progress' : 'pending';
+                        const icon = isCompleted ? '✅' : isStarted ? '⏳' : '⭕';
+
+                        return `
+                            <div class="timeline-step ${status}">
+                                <span class="timeline-icon">${icon}</span>
+                                <div class="timeline-info">
+                                    <div class="timeline-fase">${step.fase}</div>
+                                    ${step.timestamp_inizio ? `<div class="timeline-time">Iniziato: ${new Date(step.timestamp_inizio).toLocaleString('it-IT')}</div>` : ''}
+                                    ${step.timestamp_fine ? `<div class="timeline-time">Completato: ${new Date(step.timestamp_fine).toLocaleString('it-IT')}</div>` : ''}
+                                    ${step.operatore ? `<div class="timeline-time">Operatore: ${step.operatore}</div>` : ''}
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+            } catch (error) {
+                console.error('Errore apertura modal:', error);
+                alert('Errore caricamento dettagli ordine');
+                closeModal();
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('orderModal').classList.remove('show');
+        }
+
+        // Chiudi modal cliccando fuori
+        window.addEventListener('click', (e) => {
+            const modal = document.getElementById('orderModal');
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>
